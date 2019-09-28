@@ -1,4 +1,17 @@
+//--------------------------------------------------------------------------------------------
+//! @author SpaceKotik
+//! @file	main.c
+//! Main file of the project.
+//!
+//! This file contains functions for sorting poems.
+//--------------------------------------------------------------------------------------------
+
 #include "consts.h"
+
+//--------------------------------------------------------------------------------------------
+//! @fn main
+//! Main function of project.
+//--------------------------------------------------------------------------------------------
 
 int main(int argc, char *argv[]) {
 	//setlocale(LC_ALL, "Rus");
@@ -10,8 +23,8 @@ int main(int argc, char *argv[]) {
 
 	assert(sourceTextFile != NULL);
 
-	const unsigned int textSizeChar = FindSize(sourceTextFile, CHARS);
-	const unsigned int textSizeLines = FindSize(sourceTextFile, LINES);
+	const unsigned int textSizeChar = findSize(sourceTextFile, CHARS);
+	const unsigned int textSizeLines = findSize(sourceTextFile, LINES);
 
 	char *sourceText = (char*)malloc(textSizeChar+1);
 	assert(sourceText != NULL);
@@ -20,15 +33,15 @@ int main(int argc, char *argv[]) {
 
 	char **defaultOrder = (char**)malloc(textSizeLines*sizeof(char*));
 	assert(defaultOrder != NULL);
-	setDefaultOrder(sourceText, defaultOrder, textSizeLines);
+	setDefaultOrder(sourceText, defaultOrder);
 
 	char **firstToLastOrder = (char**)malloc(textSizeLines*sizeof(char*));
 	assert(firstToLastOrder != NULL);
-	setDefaultOrder(sourceText, firstToLastOrder, textSizeLines);
+	setDefaultOrder(sourceText, firstToLastOrder);
 
 	char **LastToFirstOrder = (char**)malloc(textSizeLines*sizeof(char*));
 	assert(LastToFirstOrder != NULL);
-	setDefaultOrder(sourceText, LastToFirstOrder, textSizeLines);
+	setDefaultOrder(sourceText, LastToFirstOrder);
 
 	sortText(LastToFirstOrder, textSizeLines, LTOF);
 	sortText(firstToLastOrder, textSizeLines, FTOL);
@@ -37,7 +50,7 @@ int main(int argc, char *argv[]) {
 	FILE *outputTextFile = fopen("Onegin_sorted.txt", "w");
 	assert(outputTextFile != NULL);
 
-	WriteToFile(sourceText, outputTextFile, defaultOrder, textSizeLines);
+	WriteToFile(outputTextFile, defaultOrder, textSizeLines);
 
 	int i;
 	for (i = 0; i < 20; ++i) {
@@ -45,14 +58,14 @@ int main(int argc, char *argv[]) {
 	}
 	fprintf(outputTextFile, "\n");
 
-	WriteToFile(sourceText, outputTextFile, firstToLastOrder, textSizeLines);
+	WriteToFile(outputTextFile, firstToLastOrder, textSizeLines);
 
 	for (i = 0; i < 20; ++i) {
 		fprintf(outputTextFile, "-");
 	}
 	fprintf(outputTextFile, "\n");
 
-	WriteToFile(sourceText, outputTextFile, LastToFirstOrder, textSizeLines);
+	WriteToFile(outputTextFile, LastToFirstOrder, textSizeLines);
 
 	fclose(outputTextFile);
 
@@ -63,7 +76,17 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-unsigned int FindSize(FILE *sourceFile, const int mode) {
+//--------------------------------------------------------------------------------------------
+//! @fn findSize(FILE *sourceFile, const int mode)
+//! Finds size of the input file in *mode* value.
+//!
+//! @param[in]  sourceText  Measurable file.
+//! @param[in]  mode		Defines what the function is measuring (CHARS or LINES).
+//!
+//! @return		Returns size or -1 in case of error.
+//--------------------------------------------------------------------------------------------
+
+unsigned int findSize(FILE *sourceFile, const int mode) {
 	assert(sourceFile != NULL);
 
 	fseek(sourceFile, 0, SEEK_SET);
@@ -88,6 +111,16 @@ unsigned int FindSize(FILE *sourceFile, const int mode) {
 	return totalSize;
 }
 
+//--------------------------------------------------------------------------------------------
+//! @fn scanText(FILE *sourceFile, char *outText)
+//! Writes all text from the sourceFile to string outText.
+//!
+//! @param[in]  sourceText 	Readable file.
+//! @param[out]	outText 	String in which the text is written.
+//!
+//! @return		Returns 0 on success or -1 on error.
+//--------------------------------------------------------------------------------------------
+
 int scanText(FILE *sourceFile, char *outText) {
 	assert(sourceFile != NULL);
 	assert(outText != NULL);
@@ -99,11 +132,23 @@ int scanText(FILE *sourceFile, char *outText) {
 	while (fscanf(sourceFile, "%c", &currChar) != EOF) {
 		outText[i++] = currChar;
 	}
+	//fread(sourceFile, )
 	outText[i] = '\0';
 	return SUCCESS;
 }
 
-int setDefaultOrder(char *sourceText, char **order, const unsigned Lines) {
+//--------------------------------------------------------------------------------------------
+//! @fn setDefaultOrder(char *sourceText, char **order)
+//! Sets the default otder of lines (1, 2, 3...).
+//!
+//! @param[in] 	sourceText 	Readable string.
+//! @param[out]	order 		The array of pointers to the beginning of the lines.
+//!
+//! @return		Always returns 0 (for now at least).
+//--------------------------------------------------------------------------------------------
+
+
+int setDefaultOrder(char *sourceText, char **order) {
 	assert(sourceText != NULL);
 	assert(order != NULL);
 
@@ -118,6 +163,18 @@ int setDefaultOrder(char *sourceText, char **order, const unsigned Lines) {
 		}
 	return SUCCESS;
 }
+
+//--------------------------------------------------------------------------------------------
+//! @fn sortText(char **order, const unsigned int lines, const int mode)
+//! Sorts the array of pointers to beginnings of the lines using qsort.
+//!
+//!
+//! @param[out] order 	The array of pointers to the beginning of the lines.
+//! @param[in] lines 	The number of lines in the text.
+//! @param[in]	mode 	FTOL or LTOF; defines the order of sorting.	 
+//!
+//! @return				Returns 0 on success or -1 on error.
+//--------------------------------------------------------------------------------------------
 
 int sortText(char **order, const unsigned int lines, const int mode) {
 	assert(order != NULL);
@@ -135,6 +192,17 @@ int sortText(char **order, const unsigned int lines, const int mode) {
 	}
 	return SUCCESS;
 }
+
+//--------------------------------------------------------------------------------------------
+//! @fn compFtoL(const void *first, const void *second)
+//! Comparator for qsort; sorts strings from firts to last letter.
+//!
+//!
+//! @param[in] 	first 	The first string.
+//! @param[in]	second	The second string.	 
+//!
+//! @return				-1, 0 or 1 if 1st string is less, equal to or greater than 2nd string.
+//--------------------------------------------------------------------------------------------
 
 int compFtoL(const void *first, const void *second) {
 	char *frst = *(char**)first;
@@ -169,6 +237,17 @@ int compFtoL(const void *first, const void *second) {
 		}
 	}
 }
+
+//--------------------------------------------------------------------------------------------
+//! @fn compLtoF(const void *first, const void *second)
+//! Comparator for qsort; sorts strings from last to first letter.
+//!
+//!
+//! @param[in] 	first 	The first string.
+//! @param[in]	second	The second string.	 
+//!
+//! @return				-1, 0 or 1 if 1st string is less, equal to or greater than 2nd string.
+//--------------------------------------------------------------------------------------------
 
 int compLtoF(const void *first, const void *second) {
 	char *frst = *(char**)first;
@@ -215,8 +294,19 @@ int compLtoF(const void *first, const void *second) {
 	}
 }
 
-int WriteToFile(char *sourceText, FILE* file, char **order, const unsigned int lines) {
-	assert(sourceText != NULL);
+//--------------------------------------------------------------------------------------------
+//! @fn WriteToFile(FILE* file, char **order, const unsigned int lines)
+//! Writes a poem to file.
+//!
+//!
+//! @param[in] 	file 	The destination file.
+//! @param[in]	order	The array of pointers to the beginning of the lines.
+//! @param[in]	lines	The number of lines in the text.	
+//!
+//! @return				Always returns 0 (for now at least).
+//--------------------------------------------------------------------------------------------
+
+int WriteToFile(FILE* file, char **order, const unsigned int lines) {
 	assert(file != NULL);
 	assert(order != NULL);
 
@@ -227,5 +317,10 @@ int WriteToFile(char *sourceText, FILE* file, char **order, const unsigned int l
 			fprintf(file, "%c", order[i][++j]);
 		} while (order[i][j] != '\n');
 	}
+
+	/*int i;
+	for (i = 0; i < lines; ++i) {
+			fprintf(file, "%s", order[i]);
+	}*/	
 	return SUCCESS;
 }
